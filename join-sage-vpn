@@ -1,0 +1,58 @@
+#!/bin/bash -e
+
+print_usage() {
+    echo "Usage: ${0} client-ip"
+}
+
+wireguard_installed() {
+    command -v wg &> /dev/null && command -v wg-quick &> /dev/null
+}
+
+if ! wireguard_installed; then
+    echo "Wireguard is not installed! Please install using the following instructions and then retry this script:"
+    echo
+    echo "https://www.wireguard.com/install"
+    echo
+    exit 1
+fi
+
+client_ip="${1}"
+
+if [ -z "${client_ip}" ]; then
+    echo "Missing client IP!"
+    echo
+    print_usage
+    exit 1
+fi
+
+# Generate key pair.
+key=$(wg genkey)
+pubkey=$(wg pubkey <<< "${key}")
+
+# Ensure wireguard config directory exists.
+mkdir -p /etc/wireguard
+
+# Write client wireguard config.
+cat > /etc/wireguard/wg-sage.conf <<EOF
+[Interface]
+PrivateKey = ${key}
+Address = ${client_ip}/32
+
+[Peer]
+PublicKey = qTFbhaYXOwjqfIVzqgHwHMD59e/ny9Gr47W2yOnjSnk=
+Endpoint = vpn.sagecontinuum.org:51820
+AllowedIPs = 10.10.0.1/32
+PersistentKeepalive = 25
+EOF
+
+# Ensure that wireguard connection is enabled.
+systemctl enable --now wg-quick@wg-sage
+
+echo "Congratulations! Your client is now configured to connect to the Sage VPN!"
+echo
+echo "Please share the following public key with a Sage admin to complete this process:"
+echo "${pubkey}"
+echo
+
+# Restart just in case old config was loaded.
+systemctl restart wg-quick@wg-sage
