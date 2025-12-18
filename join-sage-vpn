@@ -1,9 +1,5 @@
 #!/bin/bash -e
 
-print_usage() {
-    echo "Usage: ${0} client-ip"
-}
-
 wireguard_installed() {
     command -v wg &> /dev/null && command -v wg-quick &> /dev/null
 }
@@ -16,14 +12,7 @@ if ! wireguard_installed; then
     exit 1
 fi
 
-client_ip="${1}"
-
-if [ -z "${client_ip}" ]; then
-    echo "Missing client IP!"
-    echo
-    print_usage
-    exit 1
-fi
+: "${CLIENT_IP:?CLIENT_IP must be defined !}"
 
 # Generate key pair.
 key=$(wg genkey)
@@ -36,12 +25,12 @@ mkdir -p /etc/wireguard
 cat > /etc/wireguard/wg-sage.conf <<EOF
 [Interface]
 PrivateKey = ${key}
-Address = ${client_ip}/32
+Address = ${CLIENT_IP}/32
 
 [Peer]
 PublicKey = qTFbhaYXOwjqfIVzqgHwHMD59e/ny9Gr47W2yOnjSnk=
-Endpoint = vpn.sagecontinuum.org:51820
-AllowedIPs = 10.10.0.1/32
+Endpoint = vpn.sagecontinuum.org:51821
+AllowedIPs = 10.107.0.1/32
 PersistentKeepalive = 25
 EOF
 
