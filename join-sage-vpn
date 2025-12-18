@@ -12,7 +12,7 @@ if ! wireguard_installed; then
     exit 1
 fi
 
-: "${CLIENT_IP:?CLIENT_IP must be defined !}"
+: "${CLIENT_IP:?CLIENT_IP must be set to ip address on vpn}"
 
 # Generate key pair.
 key=$(wg genkey)
